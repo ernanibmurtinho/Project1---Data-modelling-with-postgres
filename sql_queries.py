@@ -12,13 +12,14 @@ songplay_table_create = ("""
 CREATE TABLE IF NOT EXISTS songplays( 
 songplay_id SERIAL PRIMARY KEY, 
 start_time VARCHAR, 
-user_id VARCHAR, 
+user_id VARCHAR REFERENCES users(user_id), 
 level VARCHAR, 
-song_id VARCHAR, 
-artist_id VARCHAR, 
+song_id VARCHAR REFERENCES songs(song_id), 
+artist_id VARCHAR REFERENCES artists(artist_id), 
 session_id VARCHAR, 
 location VARCHAR, 
-user_agent VARCHAR)
+user_agent VARCHAR
+)
 """)
 
 user_table_create = ("""
