@@ -1,3 +1,4 @@
+## Intro to this project dataset
 The purpose of this project is to load song datasets and model a fact and dimensional tables, to gain insigths about the data.
 
 We have 2 datasets, so:
