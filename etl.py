@@ -15,18 +15,20 @@ def process_song_file(cur, filepath):
     #Loading frame var to all of the function - Dataframe
     frame = pd.read_json( filepath, lines=True )
     
+    # insert artist record - The order was changed, because of the relationship - FK artist_table
+    artist_data = frame.loc[ 0, ['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude'] ]
+    artist_data = artist_data.values.tolist()
+    
+    cur.execute(artist_table_insert, artist_data)
+    
+    # insert song record
+
     columns_song = ['song_id', 'title', 'artist_id', 'year', 'duration']
     song_data = frame.loc[0,columns_song]
     song_data['year'] = song_data['year'].astype(str)
     song_data = song_data.tolist()
 
     cur.execute(song_table_insert, song_data)
-    
-    # insert artist record
-    artist_data = frame.loc[ 0, ['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude'] ]
-    artist_data = artist_data.values.tolist()
-
-    cur.execute(artist_table_insert, artist_data)
 
 
 
@@ -74,27 +76,32 @@ def process_log_file(cur, filepath):
         cur.execute(user_table_insert, list(row))
 
 
-
-    df = frame[['song', 'artist', 'length', 'ts', 'userId', 'level',  'sessionId', 'location', 'userAgent']]
+    conn = psycopg2.connect("host=127.0.0.1 dbname=sparkifydb user=student password=student")    
+    conn.commit()
+    columns_songplay = ['song', 'artist', 'length', 'ts', 'userId', 'level',  'sessionId', 'location', 'userAgent']
+    df = frame.loc[:, columns_songplay]
+    df['length'] = df['length'].astype(str)
 
     # insert songplay records
     for index, row in df.iterrows():
 
 
         # get songid and artistid from song and artist tables
-        cur.execute(song_select, (row.song, row.artist, row.length))
+        cur.execute(song_select, (row.song, row.artist, row.length, ))
         results = cur.fetchone()
         
         if results:
             songid, artistid = results
             #Loading the songplay_data variable with (a key for the table is the union of songid + artistid)
             #The other variables, will load together with the static songid and artistid
-            songplay_data = [(songid, artistid), songid, artistid, row.ts, row.userId, row.level, row.sessionId, row.location, row.userAgent] 
+            songplay_data = [songid, artistid, row.ts, row.userId, row.level, row.sessionId, row.location, row.userAgent]
+
         else:
-            songid, artistid = None, None
+            songid, artistid, row.ts, row.userId, row.level, row.sessionId, row.location, row.userAgent = None, None, None, None, None, None, None, None
 
 
     # insert songplay record
+    songplay_data = [songid, artistid, row.ts, row.userId, row.level, row.sessionId, row.location, row.userAgent]
     cur.execute(songplay_table_insert, songplay_data)
 
 
